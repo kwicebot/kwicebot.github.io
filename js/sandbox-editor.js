@@ -12,8 +12,9 @@
       () => byText('blog.112077.xyz')
     ]) },
     { id: 'site.subtitle', label: '网站副标题', page: '/', find: () => pick([
-      () => byContains('内容模板站'),
-      () => byContains(' - ')
+      () => qs('nav a[href^="javascript:anzhiyu.scrollToDest"]'),
+      () => qsa('nav a').find(a => textOf(a).includes(' - ')),
+      () => byContains('内容模板站')
     ]) },
     { id: 'author.name', label: '作者名称', page: '/', find: () => pick([
       () => footerAuthorLink(),
@@ -212,6 +213,13 @@
     const el = f.find();
     const input = listEl.querySelector(`input[data-id="${CSS.escape(id)}"]`);
     if (!el || !input) return;
+
+    // 保护：避免误把大容器整段替换
+    if ((el.children?.length || 0) > 8 || (textOf(el).length > 220 && id === 'site.subtitle')) {
+      alert('检测到目标元素过大，已阻止本次写入。请刷新后重试。');
+      return;
+    }
+
     el.textContent = input.value;
     state.values[id] = input.value;
     save();
