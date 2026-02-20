@@ -89,7 +89,8 @@
   ];
 
   const state = {
-    values: {}
+    values: {},
+    tab: 'current' // current | all
   };
 
   function qs(sel, root = document) { return root.querySelector(sel); }
@@ -148,6 +149,10 @@
     .sb-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
     .sb-actions button{border:0;background:#334b8a;color:#fff;padding:6px 8px;border-radius:8px;cursor:pointer}
     .sb-actions .danger{background:#8a3333}
+    .sb-tabs{display:flex;gap:6px;margin-top:8px}
+    .sb-tabs button{border:0;background:#253255;color:#d6def7;padding:6px 8px;border-radius:8px;cursor:pointer}
+    .sb-tabs button.active{background:#425AEF;color:#fff}
+    .sb-stats{margin-top:6px;font-size:11px;opacity:.85}
     .sb-list{padding:8px}
     .sb-item{border:1px solid rgba(255,255,255,.14);border-radius:10px;padding:8px;margin-bottom:8px}
     .sb-item.ok{border-color:#5fb878;background:rgba(95,184,120,.10)}
@@ -172,6 +177,11 @@
         <button id="sbCopy">复制JSON</button>
         <button id="sbReset" class="danger">清空本页草稿</button>
       </div>
+      <div class="sb-tabs">
+        <button id="sbTabCurrent" class="active">当前页面配置</button>
+        <button id="sbTabAll">全部可改配置</button>
+      </div>
+      <div class="sb-stats" id="sbStats">-</div>
     </div>
     <div class="sb-list" id="sbList"></div>
   `;
@@ -213,6 +223,9 @@
   document.addEventListener('mouseup', () => dragging = false);
 
   const listEl = panel.querySelector('#sbList');
+  const statsEl = panel.querySelector('#sbStats');
+  const tabCurrentBtn = panel.querySelector('#sbTabCurrent');
+  const tabAllBtn = panel.querySelector('#sbTabAll');
   const exportBtn = panel.querySelector('#sbExport');
   const copyBtn = panel.querySelector('#sbCopy');
   const resetBtn = panel.querySelector('#sbReset');
@@ -220,7 +233,17 @@
   function render() {
     listEl.innerHTML = '';
 
-    FIELDS.forEach((f, idx) => {
+    const totalConfigured = FIELDS.filter(f => (state.values[f.id] ?? '').toString().trim() !== '').length;
+    const currentFields = FIELDS.filter(f => f.page === PAGE);
+    const currentConfigured = currentFields.filter(f => (state.values[f.id] ?? '').toString().trim() !== '').length;
+    statsEl.textContent = `总配置：${totalConfigured}/${FIELDS.length} ｜ 当前页：${currentConfigured}/${currentFields.length}`;
+
+    tabCurrentBtn.classList.toggle('active', state.tab === 'current');
+    tabAllBtn.classList.toggle('active', state.tab === 'all');
+
+    const visibleFields = state.tab === 'current' ? currentFields : FIELDS;
+
+    visibleFields.forEach((f, idx) => {
       const onPage = f.page === PAGE;
       const item = document.createElement('div');
       let target = null;
@@ -296,11 +319,22 @@
     setTimeout(() => el.classList.remove('sb-highlight'), 1200);
   }
 
+  tabCurrentBtn.addEventListener('click', () => {
+    state.tab = 'current';
+    render();
+  });
+
+  tabAllBtn.addEventListener('click', () => {
+    state.tab = 'all';
+    render();
+  });
+
   listEl.addEventListener('input', (e) => {
     const input = e.target.closest('input[data-id]');
     if (!input) return;
     state.values[input.dataset.id] = input.value;
     save();
+    render();
   });
 
   listEl.addEventListener('click', (e) => {
