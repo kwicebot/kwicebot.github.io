@@ -1,5 +1,5 @@
-.kwice-notice-wrap{max-width:1200px;margin:10px auto 12px;display:flex;align-items:center;gap:10px;padding:0 14px;position:relative;z-index:3}
-.kwice-notice-badge{background:#0f111a;border:1px solid rgba(255,255,255,.16);color:#fff;border-radius:10px;padding:6px 12px;font-weight:700;font-size:13px}
-.kwice-notice-track{flex:1;background:rgba(10,14,28,.78);border:1px solid rgba(132,154,255,.26);color:#eaf0ff;border-radius:10px;overflow:hidden;white-space:nowrap}
-.kwice-notice-marquee{display:inline-block;padding:6px 14px;animation:kwiceMarquee 18s linear infinite}
+.kwice-notice-wrap{width:100%;display:grid;grid-template-columns:auto 1fr;align-items:center;gap:8px;margin:6px 0 12px;position:relative;z-index:3}
+.kwice-notice-badge{height:30px;display:inline-flex;align-items:center;justify-content:center;background:#0d111b;border:1px solid rgba(255,255,255,.18);color:#fff;border-radius:8px;padding:0 14px;font-weight:700;font-size:13px;line-height:1}
+.kwice-notice-track{height:30px;display:flex;align-items:center;background:rgba(10,14,28,.84);border:1px solid rgba(132,154,255,.25);color:#eaf0ff;border-radius:8px;overflow:hidden;white-space:nowrap}
+.kwice-notice-marquee{display:inline-block;padding:0 12px;animation:kwiceMarquee 20s linear infinite}
 @keyframes kwiceMarquee{0%{transform:translateX(100%)}100%{transform:translateX(-100%)}}
