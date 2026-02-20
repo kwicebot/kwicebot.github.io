@@ -6,6 +6,7 @@
   const KEY = `blog-sandbox-guided-v3:${PAGE}`;
 
   const FIELDS = [
+    // 1) 站点基础信息
     { id: 'site.title', label: '网站主标题', page: '/', find: () => pick([
       () => qs('nav a[href="/"] .site-name'),
       () => qsa('nav a[href="/"]')[0],
@@ -16,22 +17,71 @@
       () => qsa('nav a').find(a => textOf(a).includes(' - ')),
       () => byContains('内容模板站')
     ]) },
+    { id: 'site.description', label: '站点描述', page: '/', configOnly: true },
+    { id: 'site.keywords', label: '关键词(逗号分隔)', page: '/', configOnly: true },
     { id: 'author.name', label: '作者名称', page: '/', find: () => pick([
       () => footerAuthorLink(),
       () => byText('kwice')
     ]) },
-    { id: 'home.title', label: '首页主标题', page: '/', find: () => byText('你好，朋友') },
-    { id: 'home.subtitle', label: '首页副标题', page: '/', find: () => byText('欢迎来到我的小站') },
-    { id: 'home.default_descr', label: '首页描述文案', page: '/', find: () => byContains('这里是内容模板站') },
+
+    // 2) 顶部菜单与页面
     { id: 'menu.article', label: '菜单-文章', page: '/', find: () => navMenu('文章') },
     { id: 'menu.friend', label: '菜单-友链', page: '/', find: () => navMenu('友链') },
     { id: 'menu.mine', label: '菜单-我的', page: '/', find: () => navMenu('我的') },
     { id: 'menu.about', label: '菜单-关于', page: '/', find: () => navMenu('关于') },
+    { id: 'menu.path.comments', label: '留言板路径', page: '/', configOnly: true },
+    { id: 'menu.path.music', label: '音乐馆路径', page: '/', configOnly: true },
+    { id: 'menu.path.about', label: '关于路径', page: '/', configOnly: true },
+    { id: 'menu.path.essay', label: '闲言碎语路径', page: '/', configOnly: true },
+
+    // 3) 个人信息与社交
+    { id: 'social.github', label: 'GitHub链接', page: '/', configOnly: true },
+    { id: 'social.email', label: '邮箱', page: '/', configOnly: true },
+    { id: 'social.bilibili', label: 'Bilibili链接(可选)', page: '/', configOnly: true },
+    { id: 'social.other', label: '其他社媒链接(可选)', page: '/', configOnly: true },
+    { id: 'avatar.url', label: '头像URL', page: '/', configOnly: true },
+
+    // 4) 首页模块文案
+    { id: 'home.title', label: '首页主标题', page: '/', find: () => byText('你好，朋友') },
+    { id: 'home.subtitle', label: '首页副标题', page: '/', find: () => byText('欢迎来到我的小站') },
+    { id: 'home.default_descr', label: '首页描述文案', page: '/', find: () => byContains('这里是内容模板站') },
+
+    // 5) 分类映射
+    { id: 'category.1', label: '分类1名称', page: '/', configOnly: true },
+    { id: 'category.2', label: '分类2名称', page: '/', configOnly: true },
+    { id: 'category.3', label: '分类3名称', page: '/', configOnly: true },
+
+    // 6) 音乐配置
+    { id: 'music.playlist_id', label: '音乐歌单ID', page: '/', configOnly: true },
+    { id: 'music.volume', label: '音乐默认音量(0~1)', page: '/', configOnly: true },
+
+    // 7) 评论系统
+    { id: 'comment.provider', label: '评论系统类型(Waline/Twikoo/Artalk/Giscus)', page: '/', configOnly: true },
+    { id: 'comment.server_or_repo', label: '评论服务地址/仓库', page: '/', configOnly: true },
+    { id: 'comment.key_or_id', label: '评论Key/ID', page: '/', configOnly: true },
+
+    // 8) 页脚与声明
     { id: 'footer.badge1', label: '页脚徽标1', page: '/', find: () => byContains('博客框架为Hexo') },
     { id: 'footer.badge2', label: '页脚徽标2', page: '/', find: () => byContains('本站使用AnZhiYu主题') },
     { id: 'footer.copyright', label: '页脚版权', page: '/', find: () => byContains('©2020') },
+    { id: 'footer.hosting', label: '托管平台(Cloudflare/GitHub等)', page: '/', configOnly: true },
+    { id: 'footer.icp', label: '备案号(可选)', page: '/', configOnly: true },
+
+    // 9) 图像资源
+    { id: 'image.avatar', label: '头像图URL', page: '/', configOnly: true },
+    { id: 'image.home_cover', label: '首页默认封面URL', page: '/', configOnly: true },
+    { id: 'image.about_bg', label: '关于页背景图URL(可选)', page: '/', configOnly: true },
+
+    // 10) 部署与DNS
+    { id: 'deploy.repo', label: '部署仓库', page: '/', configOnly: true },
+    { id: 'deploy.domain', label: '自定义域名', page: '/', configOnly: true },
+    { id: 'deploy.dns_ok', label: 'DNS已正确指向(是/否)', page: '/', configOnly: true },
+    { id: 'deploy.https_force', label: '已启用HTTPS强制(是/否)', page: '/', configOnly: true },
+
+    // 额外：建站天数
     { id: 'runtime.launch_date', label: '建站起始日期(YYYY-MM-DD)', page: '/', configOnly: true },
 
+    // 子页面标题
     { id: 'page.about.title', label: '关于页标题', page: '/about/', find: () => pageTitle() },
     { id: 'page.comments.title', label: '留言板标题', page: '/comments/', find: () => pageTitle() },
     { id: 'page.essay.title', label: '闲言碎语标题', page: '/essay/', find: () => pageTitle() },
