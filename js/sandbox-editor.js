@@ -30,6 +30,7 @@
     { id: 'footer.badge1', label: '页脚徽标1', page: '/', find: () => byContains('博客框架为Hexo') },
     { id: 'footer.badge2', label: '页脚徽标2', page: '/', find: () => byContains('本站使用AnZhiYu主题') },
     { id: 'footer.copyright', label: '页脚版权', page: '/', find: () => byContains('©2020') },
+    { id: 'runtime.launch_date', label: '建站起始日期(YYYY-MM-DD)', page: '/', configOnly: true },
 
     { id: 'page.about.title', label: '关于页标题', page: '/about/', find: () => pageTitle() },
     { id: 'page.comments.title', label: '留言板标题', page: '/comments/', find: () => pageTitle() },
@@ -131,7 +132,8 @@
   fab.textContent = '打开字段清单';
   document.body.appendChild(fab);
 
-  panel.style.display = 'none';
+  panel.style.display = 'block';
+  fab.textContent = '收起字段清单';
   fab.addEventListener('click', () => {
     const hidden = panel.style.display === 'none';
     panel.style.display = hidden ? 'block' : 'none';
@@ -174,24 +176,24 @@
       let target = null;
       let orig = '';
 
-      if (onPage) {
+      if (onPage && !f.configOnly) {
         target = f.find();
         orig = textOf(target);
       }
 
       const val = (state.values[f.id] ?? (onPage ? orig : ''));
-      const ok = onPage && !!target;
+      const ok = f.configOnly ? true : (onPage && !!target);
 
       item.className = `sb-item ${ok ? 'ok' : ''}`;
       item.innerHTML = `
         <div class="sb-l1">
           <div><b>${idx + 1}. ${f.label}</b><div class="sb-id">${f.id}</div></div>
-          <div>${onPage ? (ok ? '✅ 已识别' : '⚠️ 未识别') : `➡ 去 ${f.page}`}</div>
+          <div>${f.configOnly ? '⚙️ 配置项' : (onPage ? (ok ? '✅ 已识别' : '⚠️ 未识别') : `➡ 去 ${f.page}`)}</div>
         </div>
-        <div class="sb-orig">原文字：${onPage ? (orig || '<空>') : '此字段不在当前页面'}</div>
-        <input class="sb-input" data-id="${f.id}" value="${escapeHtmlAttr(val)}" placeholder="在这里直接改文案" ${onPage && ok ? '' : 'disabled'} />
+        <div class="sb-orig">原文字：${f.configOnly ? '（配置项，无页面原文）' : (onPage ? (orig || '<空>') : '此字段不在当前页面')}</div>
+        <input class="sb-input" data-id="${f.id}" value="${escapeHtmlAttr(val)}" placeholder="在这里直接改文案" ${((onPage && ok) || f.configOnly) ? '' : 'disabled'} />
         <div class="sb-mini">
-          ${onPage ? `<button data-act="focus" data-id="${f.id}">定位</button><button data-act="apply" data-id="${f.id}">应用</button>` : `<button data-act="goto" data-page="${f.page}">打开对应页面</button>`}
+          ${f.configOnly ? `<button data-act="apply" data-id="${f.id}">应用</button>` : (onPage ? `<button data-act="focus" data-id="${f.id}">定位</button><button data-act="apply" data-id="${f.id}">应用</button>` : `<button data-act="goto" data-page="${f.page}">打开对应页面</button>`)}
         </div>
       `;
 
@@ -209,10 +211,21 @@
 
   function applyField(id) {
     const f = FIELDS.find(x => x.id === id);
-    if (!f || f.page !== PAGE) return;
-    const el = f.find();
+    if (!f) return;
     const input = listEl.querySelector(`input[data-id="${CSS.escape(id)}"]`);
-    if (!el || !input) return;
+    if (!input) return;
+
+    if (f.configOnly) {
+      state.values[id] = input.value;
+      save();
+      alert('已保存配置项，导出 JSON 后我会落到 Hexo 配置并上线。');
+      render();
+      return;
+    }
+
+    if (f.page !== PAGE) return;
+    const el = f.find();
+    if (!el) return;
 
     // 保护：避免误把大容器整段替换
     if ((el.children?.length || 0) > 8 || (textOf(el).length > 220 && id === 'site.subtitle')) {
@@ -296,15 +309,7 @@
     location.reload();
   });
 
-  // 防误触主题交互
-  document.addEventListener('click', (e) => {
-    if (e.target.closest('.sb-panel') || e.target.closest('.sb-fab')) return;
-    const clickable = e.target.closest('a,button,[role="button"],.menu-item,.nav-item');
-    if (clickable) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
-  }, true);
+  // 允许正常点击浏览（不再全局拦截）
 
   load();
   render();
