@@ -61,9 +61,18 @@
     { id: 'comment.key_or_id', label: '评论Key/ID', page: '/', configOnly: true },
 
     // 8) 页脚与声明
-    { id: 'footer.badge1', label: '页脚徽标1', page: '/', find: () => byContains('博客框架为Hexo') },
-    { id: 'footer.badge2', label: '页脚徽标2', page: '/', find: () => byContains('本站使用AnZhiYu主题') },
-    { id: 'footer.copyright', label: '页脚版权', page: '/', find: () => byContains('©2020') },
+    { id: 'footer.badge1', label: '页脚徽标1', page: '/', find: () => pick([
+      () => qs('[role="contentinfo"] a[href*="hexo.io"]'),
+      () => qs('footer a[href*="hexo.io"]')
+    ]) },
+    { id: 'footer.badge2', label: '页脚徽标2', page: '/', find: () => pick([
+      () => qs('[role="contentinfo"] a[href*="docs.anheyu.com"]'),
+      () => qs('footer a[href*="docs.anheyu.com"]')
+    ]) },
+    { id: 'footer.copyright', label: '页脚版权', page: '/', find: () => pick([
+      () => qsa('[role="contentinfo"] *').find(el => /©\s*\d{4}/.test(textOf(el)) && textOf(el).includes('By')),
+      () => qsa('footer *').find(el => /©\s*\d{4}/.test(textOf(el)) && textOf(el).includes('By'))
+    ]) },
     { id: 'footer.hosting', label: '托管平台(Cloudflare/GitHub等)', page: '/', configOnly: true },
     { id: 'footer.icp', label: '备案号(可选)', page: '/', configOnly: true },
 
