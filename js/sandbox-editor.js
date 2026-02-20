@@ -93,7 +93,7 @@
 
   function editable(el) {
     if (!el) return false;
-    if (el.closest('.sb-panel')) return false;
+    if (el.closest('.sb-panel') || el.closest('.sb-fab')) return false;
     const tag = el.tagName;
     if (['SCRIPT','STYLE','CODE','PRE','SVG','PATH','INPUT','TEXTAREA','SELECT'].includes(tag)) return false;
     return (el.textContent || '').trim().length > 0;
@@ -102,7 +102,8 @@
   const style = document.createElement('style');
   style.textContent = `
     .sb-panel{position:fixed;left:16px;top:16px;z-index:999999;background:rgba(18,18,22,.96);color:#fff;width:380px;max-height:86vh;overflow:auto;border-radius:14px;box-shadow:0 8px 28px rgba(0,0,0,.35);font-size:12px}
-    .sb-head{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.12);position:sticky;top:0;background:rgba(18,18,22,.98)}
+    .sb-head{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.12);position:sticky;top:0;background:rgba(18,18,22,.98);cursor:move;user-select:none}
+    .sb-fab{position:fixed;right:16px;bottom:16px;z-index:1000000;border:0;border-radius:999px;padding:10px 14px;background:#425AEF;color:#fff;font-size:13px;box-shadow:0 8px 24px rgba(0,0,0,.35);cursor:pointer}
     .sb-head b{font-size:13px}
     .sb-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
     .sb-actions button{border:0;background:#334b8a;color:#fff;padding:6px 8px;border-radius:8px;cursor:pointer}
@@ -126,8 +127,8 @@
   const panel = document.createElement('aside');
   panel.className = 'sb-panel';
   panel.innerHTML = `
-    <div class="sb-head">
-      <b>沙盘配置编辑器（可上线版）</b>
+    <div class="sb-head" id="sbDragHandle">
+      <b>沙盘配置编辑器（可上线版，可拖动）</b>
       <div style="opacity:.8;margin-top:4px">先点“绑定位置”，再点“编辑文字”。每一项可视定位，可导出配置。</div>
       <div class="sb-actions">
         <button id="sbBindToggle">绑定模式：关</button>
@@ -140,11 +141,52 @@
   `;
   document.body.appendChild(panel);
 
+  const fab = document.createElement('button');
+  fab.className = 'sb-fab';
+  fab.id = 'sbFab';
+  fab.textContent = '打开字段清单';
+  document.body.appendChild(fab);
+
+  const dragHandle = panel.querySelector('#sbDragHandle');
   const listEl = panel.querySelector('#sbList');
   const bindToggleBtn = panel.querySelector('#sbBindToggle');
   const exportBtn = panel.querySelector('#sbExport');
   const copyBtn = panel.querySelector('#sbCopy');
   const resetBtn = panel.querySelector('#sbReset');
+
+  panel.style.display = 'none';
+  fab.addEventListener('click', () => {
+    const hidden = panel.style.display === 'none';
+    panel.style.display = hidden ? 'block' : 'none';
+    fab.textContent = hidden ? '收起字段清单' : '打开字段清单';
+  });
+
+  let dragging = false;
+  let dragOffsetX = 0;
+  let dragOffsetY = 0;
+
+  dragHandle.addEventListener('mousedown', (e) => {
+    if (e.target.closest('button')) return;
+    dragging = true;
+    const rect = panel.getBoundingClientRect();
+    dragOffsetX = e.clientX - rect.left;
+    dragOffsetY = e.clientY - rect.top;
+    panel.style.left = `${rect.left}px`;
+    panel.style.top = `${rect.top}px`;
+    panel.style.right = 'auto';
+  });
+
+  document.addEventListener('mousemove', (e) => {
+    if (!dragging) return;
+    const x = Math.max(0, Math.min(window.innerWidth - panel.offsetWidth, e.clientX - dragOffsetX));
+    const y = Math.max(0, Math.min(window.innerHeight - 40, e.clientY - dragOffsetY));
+    panel.style.left = `${x}px`;
+    panel.style.top = `${y}px`;
+  });
+
+  document.addEventListener('mouseup', () => {
+    dragging = false;
+  });
 
   const markers = new Map();
 
@@ -251,7 +293,7 @@
   });
 
   document.addEventListener('click', (e) => {
-    if (e.target.closest('.sb-panel')) return;
+    if (e.target.closest('.sb-panel') || e.target.closest('.sb-fab')) return;
 
     // 绑定模式：点击页面元素完成绑定
     if (state.bindMode && state.activeFieldId) {
@@ -283,7 +325,7 @@
   }, true);
 
   document.addEventListener('dblclick', (e) => {
-    if (e.target.closest('.sb-panel')) return;
+    if (e.target.closest('.sb-panel') || e.target.closest('.sb-fab')) return;
     const target = e.target.closest('*');
     if (!editable(target)) return;
     e.preventDefault();
