@@ -17,8 +17,8 @@
       () => qsa('nav a').find(a => textOf(a).includes(' - ')),
       () => byContains('内容模板站')
     ]) },
-    { id: 'site.description', label: '站点描述', page: '/', configOnly: true },
-    { id: 'site.keywords', label: '关键词(逗号分隔)', page: '/', configOnly: true },
+    { id: 'site.description', label: '站点描述', page: '/', configOnly: true, type: 'text' },
+    { id: 'site.keywords', label: '关键词(逗号分隔)', page: '/', configOnly: true, type: 'text', hint: '格式：关键词1,关键词2,关键词3' },
     { id: 'author.name', label: '作者名称', page: '/', find: () => pick([
       () => footerAuthorLink(),
       () => byText('kwice')
@@ -35,16 +35,16 @@
     { id: 'menu.path.essay', label: '闲言碎语路径', page: '/', configOnly: true },
 
     // 3) 个人信息与社交
-    { id: 'social.github', label: 'GitHub链接', page: '/', configOnly: true },
-    { id: 'social.email', label: '邮箱', page: '/', configOnly: true },
-    { id: 'social.bilibili', label: 'Bilibili链接(可选)', page: '/', configOnly: true },
-    { id: 'social.other', label: '其他社媒链接(可选)', page: '/', configOnly: true },
-    { id: 'avatar.url', label: '头像URL', page: '/', configOnly: true },
+    { id: 'social.github', label: 'GitHub链接', page: '/', configOnly: true, type: 'url' },
+    { id: 'social.email', label: '邮箱', page: '/', configOnly: true, type: 'email' },
+    { id: 'social.bilibili', label: 'Bilibili链接(可选)', page: '/', configOnly: true, type: 'url' },
+    { id: 'social.other', label: '其他社媒链接(可选)', page: '/', configOnly: true, type: 'url' },
+    { id: 'avatar.url', label: '头像URL', page: '/', configOnly: true, type: 'url' },
 
     // 4) 首页模块文案
-    { id: 'home.title', label: '首页主标题', page: '/', find: () => byText('你好，朋友') },
-    { id: 'home.subtitle', label: '首页副标题', page: '/', find: () => byText('欢迎来到我的小站') },
-    { id: 'home.default_descr', label: '首页描述文案', page: '/', find: () => byContains('这里是内容模板站') },
+    { id: 'home.title', label: '首页主标题', page: '/', configOnly: true, type: 'text' },
+    { id: 'home.subtitle', label: '首页副标题', page: '/', configOnly: true, type: 'text' },
+    { id: 'home.default_descr', label: '首页描述文案', page: '/', configOnly: true, type: 'text' },
 
     // 5) 分类映射
     { id: 'category.1', label: '分类1名称', page: '/', configOnly: true },
@@ -52,11 +52,11 @@
     { id: 'category.3', label: '分类3名称', page: '/', configOnly: true },
 
     // 6) 音乐配置
-    { id: 'music.playlist_id', label: '音乐歌单ID', page: '/', configOnly: true },
-    { id: 'music.volume', label: '音乐默认音量(0~1)', page: '/', configOnly: true },
+    { id: 'music.playlist_id', label: '音乐歌单ID', page: '/', configOnly: true, type: 'text' },
+    { id: 'music.volume', label: '音乐默认音量(0~1)', page: '/', configOnly: true, type: 'number', min: 0, max: 1, step: 0.1, hint: '范围 0 到 1' },
 
     // 7) 评论系统
-    { id: 'comment.provider', label: '评论系统类型(Waline/Twikoo/Artalk/Giscus)', page: '/', configOnly: true },
+    { id: 'comment.provider', label: '评论系统类型', page: '/', configOnly: true, type: 'select', options: ['Waline','Twikoo','Artalk','Giscus'] },
     { id: 'comment.server_or_repo', label: '评论服务地址/仓库', page: '/', configOnly: true },
     { id: 'comment.key_or_id', label: '评论Key/ID', page: '/', configOnly: true },
 
@@ -75,11 +75,11 @@
     // 10) 部署与DNS
     { id: 'deploy.repo', label: '部署仓库', page: '/', configOnly: true },
     { id: 'deploy.domain', label: '自定义域名', page: '/', configOnly: true },
-    { id: 'deploy.dns_ok', label: 'DNS已正确指向(是/否)', page: '/', configOnly: true },
-    { id: 'deploy.https_force', label: '已启用HTTPS强制(是/否)', page: '/', configOnly: true },
+    { id: 'deploy.dns_ok', label: 'DNS已正确指向', page: '/', configOnly: true, type: 'checkbox' },
+    { id: 'deploy.https_force', label: '已启用HTTPS强制', page: '/', configOnly: true, type: 'checkbox' },
 
     // 额外：建站天数
-    { id: 'runtime.launch_date', label: '建站起始日期(YYYY-MM-DD)', page: '/', configOnly: true },
+    { id: 'runtime.launch_date', label: '建站起始日期(YYYY-MM-DD)', page: '/', configOnly: true, type: 'date', hint: '格式要求：YYYY-MM-DD' },
 
     // 子页面标题
     { id: 'page.about.title', label: '关于页标题', page: '/about/', find: () => pageTitle() },
@@ -256,6 +256,23 @@
 
       const val = (state.values[f.id] ?? (onPage ? orig : ''));
       const ok = f.configOnly ? true : (onPage && !!target);
+      const enabled = ((onPage && ok) || f.configOnly);
+      const hint = f.hint ? `<div class="sb-id" style="margin:4px 0 2px">${f.hint}</div>` : '';
+
+      let controlHtml = '';
+      if (f.type === 'select') {
+        const opts = (f.options || []).map(o => `<option value="${escapeHtmlAttr(o)}" ${(String(val)===String(o))?'selected':''}>${o}</option>`).join('');
+        controlHtml = `<select class="sb-input" data-id="${f.id}" ${enabled ? '' : 'disabled'}>${opts}</select>`;
+      } else if (f.type === 'checkbox') {
+        const checked = (String(val) === 'true' || val === true) ? 'checked' : '';
+        controlHtml = `<label class="sb-input" style="display:flex;align-items:center;gap:8px"><input type="checkbox" data-id="${f.id}" ${checked} ${enabled ? '' : 'disabled'} /> <span>${f.label}</span></label>`;
+      } else {
+        const type = f.type || 'text';
+        const min = (f.min !== undefined) ? `min="${f.min}"` : '';
+        const max = (f.max !== undefined) ? `max="${f.max}"` : '';
+        const step = (f.step !== undefined) ? `step="${f.step}"` : '';
+        controlHtml = `<input class="sb-input" type="${type}" data-id="${f.id}" value="${escapeHtmlAttr(val)}" placeholder="在这里直接改文案" ${min} ${max} ${step} ${enabled ? '' : 'disabled'} />`;
+      }
 
       item.className = `sb-item ${ok ? 'ok' : ''}`;
       item.innerHTML = `
@@ -264,7 +281,8 @@
           <div>${f.configOnly ? '⚙️ 配置项' : (onPage ? (ok ? '✅ 已识别' : '⚠️ 未识别') : `➡ 去 ${f.page}`)}</div>
         </div>
         <div class="sb-orig">原文字：${f.configOnly ? '（配置项，无页面原文）' : (onPage ? (orig || '<空>') : '此字段不在当前页面')}</div>
-        <input class="sb-input" data-id="${f.id}" value="${escapeHtmlAttr(val)}" placeholder="在这里直接改文案" ${((onPage && ok) || f.configOnly) ? '' : 'disabled'} />
+        ${hint}
+        ${controlHtml}
         <div class="sb-mini">
           ${f.configOnly ? `<button data-act="apply" data-id="${f.id}">应用</button>` : (onPage ? `<button data-act="focus" data-id="${f.id}">定位</button><button data-act="apply" data-id="${f.id}">应用</button>` : `<button data-act="goto" data-page="${f.page}">打开对应页面</button>`)}
         </div>
@@ -282,14 +300,38 @@
       .replace(/>/g, '&gt;');
   }
 
+  function controlValue(ctrl) {
+    if (!ctrl) return '';
+    if (ctrl.type === 'checkbox') return !!ctrl.checked;
+    return ctrl.value;
+  }
+
+  function validateField(f, v) {
+    if (f.type === 'date') {
+      const ok = /^\d{4}-\d{2}-\d{2}$/.test(String(v || ''));
+      if (!ok) return '日期格式必须是 YYYY-MM-DD';
+    }
+    if (f.type === 'number') {
+      const n = Number(v);
+      if (Number.isNaN(n)) return '请输入有效数字';
+      if (f.min !== undefined && n < f.min) return `不能小于 ${f.min}`;
+      if (f.max !== undefined && n > f.max) return `不能大于 ${f.max}`;
+    }
+    return '';
+  }
+
   function applyField(id) {
     const f = FIELDS.find(x => x.id === id);
     if (!f) return;
-    const input = listEl.querySelector(`input[data-id="${CSS.escape(id)}"]`);
-    if (!input) return;
+    const ctrl = listEl.querySelector(`[data-id="${CSS.escape(id)}"]`);
+    if (!ctrl) return;
+    const val = controlValue(ctrl);
+
+    const err = validateField(f, val);
+    if (err) { alert(err); return; }
 
     if (f.configOnly) {
-      state.values[id] = input.value;
+      state.values[id] = val;
       save();
       alert('已保存配置项，导出 JSON 后我会落到 Hexo 配置并上线。');
       render();
@@ -306,8 +348,8 @@
       return;
     }
 
-    el.textContent = input.value;
-    state.values[id] = input.value;
+    el.textContent = String(val);
+    state.values[id] = val;
     save();
     flash(el);
     render();
@@ -329,13 +371,16 @@
     render();
   });
 
-  listEl.addEventListener('input', (e) => {
-    const input = e.target.closest('input[data-id]');
-    if (!input) return;
-    state.values[input.dataset.id] = input.value;
+  function syncDraftFromControl(el) {
+    const ctrl = el?.closest('[data-id]');
+    if (!ctrl) return;
+    state.values[ctrl.dataset.id] = controlValue(ctrl);
     save();
     render();
-  });
+  }
+
+  listEl.addEventListener('input', (e) => syncDraftFromControl(e.target));
+  listEl.addEventListener('change', (e) => syncDraftFromControl(e.target));
 
   listEl.addEventListener('click', (e) => {
     const btn = e.target.closest('button[data-act]');
