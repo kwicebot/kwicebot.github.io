@@ -1,0 +1,5 @@
+.kwice-notice-wrap{max-width:1200px;margin:10px auto 12px;display:flex;align-items:center;gap:10px;padding:0 14px;position:relative;z-index:3}
+.kwice-notice-badge{background:#0f111a;border:1px solid rgba(255,255,255,.16);color:#fff;border-radius:10px;padding:6px 12px;font-weight:700;font-size:13px}
+.kwice-notice-track{flex:1;background:rgba(10,14,28,.78);border:1px solid rgba(132,154,255,.26);color:#eaf0ff;border-radius:10px;overflow:hidden;white-space:nowrap}
+.kwice-notice-marquee{display:inline-block;padding:6px 14px;animation:kwiceMarquee 18s linear infinite}
+@keyframes kwiceMarquee{0%{transform:translateX(100%)}100%{transform:translateX(-100%)}}
